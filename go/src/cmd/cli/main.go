@@ -69,7 +69,7 @@ func main() {
 				for _, project := range projects {
 					percentage := int(float32(project.AmountRaised) / float32(project.Goal) * 100.0)
 					percentageStr := strconv.Itoa(percentage)
-					fmt.Println("-", project.Slug, "|", project.AmountRaised, project.CurrencyDisplay, "|", percentageStr+"%")
+					fmt.Println(project.Id, "|", project.Slug, "|", project.AmountRaised, project.CurrencyDisplay, "|", percentageStr+"%")
 				}
 			}
 		}

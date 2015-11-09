@@ -10,6 +10,10 @@ import (
 	"ulule/clientapi"
 )
 
+var (
+	selectedProject *clientapi.Project
+)
+
 func main() {
 	logrus.Println("---- Ulule CLI ----")
 
@@ -72,11 +76,11 @@ func main() {
 						}
 					case "select":
 						if len(args) > 2 {
-							project, err := ululeClient.SelectProject(args[2])
+							selectedProject, err = ululeClient.GetProject(args[2])
 							if err != nil {
 								fmt.Println(err.Error())
 							} else {
-								fmt.Println("project selected:", project.Id, "|", project.Slug)
+								fmt.Println("project selected:", selectedProject.Id, "|", selectedProject.Slug)
 							}
 						} else {
 							fmt.Println("error: `project select` expects a project id or slug argument")

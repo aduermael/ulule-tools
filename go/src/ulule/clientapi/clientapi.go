@@ -18,8 +18,6 @@ type ClientAPI struct {
 	username   string
 	apikey     string
 	httpClient *http.Client
-	// to store selected project ID
-	activeProjectID int
 }
 
 // New returns a ClientAPI structure
@@ -33,10 +31,9 @@ func New(username, apikey string) *ClientAPI {
 	httpClient := &http.Client{Transport: transport}
 
 	clientAPI := &ClientAPI{
-		username:        username,
-		apikey:          apikey,
-		httpClient:      httpClient,
-		activeProjectID: -1,
+		username:   username,
+		apikey:     apikey,
+		httpClient: httpClient,
 	}
 
 	return clientAPI
@@ -67,10 +64,9 @@ func (c *ClientAPI) GetProjects(filter string) ([]*Project, error) {
 	return listProjectResp.Projects, nil
 }
 
-// SelectProject sets identified project as active.
-// Some functions need one project to be active.
-// The project can be identified by its Id or Slug.
-func (c *ClientAPI) SelectProject(identifier string) (*Project, error) {
+// GetProject returns one specific ClientAPI user's
+// project identified by its Id or Slug.
+func (c *ClientAPI) GetProject(identifier string) (*Project, error) {
 	identifier = strings.Trim(identifier, " ")
 	projects, err := c.GetProjects("")
 	if err != nil {
@@ -78,7 +74,6 @@ func (c *ClientAPI) SelectProject(identifier string) (*Project, error) {
 	}
 	for _, project := range projects {
 		if identifier == project.Slug || identifier == strconv.Itoa(project.Id) {
-			c.activeProjectID = project.Id
 			return project, nil
 		}
 	}

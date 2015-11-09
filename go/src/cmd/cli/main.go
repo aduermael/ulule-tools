@@ -85,6 +85,35 @@ func main() {
 						} else {
 							fmt.Println("error: `project select` expects a project id or slug argument")
 						}
+					case "supporters":
+						if selectedProject == nil {
+							fmt.Println("error: `project supporters` needs one project to be selected with `project select`")
+						} else {
+							offset := 0
+							limit := 20
+							for {
+								linenoise.Clear()
+								supporters, err, lastPage /*lastPage*/ := ululeClient.GetProjectSupporters(selectedProject.Id, limit, offset)
+								if err != nil {
+									fmt.Println(err.Error())
+									break
+								} else {
+									for _, supporter := range supporters {
+										fmt.Println(supporter.Id, "|", supporter.UserName, "|", supporter.FirstName, supporter.LastName)
+									}
+									if !lastPage {
+										str, err := linenoise.Line("`enter` for next page, 'q' to exit> ")
+										if err != nil {
+											logrus.Fatal(err)
+										}
+										if str == "q" {
+											break
+										}
+										offset += limit
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -99,6 +128,7 @@ func completionHandler(input string) []string {
 	commands := []string{
 		"project list",
 		"project select",
+		"project supporters",
 	}
 
 	autocomplete := []string{}

@@ -80,6 +80,34 @@ func (c *ClientAPI) GetProject(identifier string) (*Project, error) {
 	return nil, errors.New("error: project not found (" + identifier + ")")
 }
 
+// GetProjectSupporters lists supporters for a project
+// limit and offset stand for pagination
+// the boolean returns indicates if it was the last
+// page of supporters or not.
+func (c *ClientAPI) GetProjectSupporters(projectID, limit, offset int) ([]*Supporter, error, bool) {
+
+	projectIDStr := strconv.Itoa(projectID)
+
+	req, err := http.NewRequest("GET", "https://api.ulule.com/v1/projects/"+projectIDStr+"/supporters?limit="+strconv.Itoa(limit)+"&offset="+strconv.Itoa(offset), nil)
+	if err != nil {
+		return nil, err, false
+	}
+
+	req.Header.Add("Authorization", "ApiKey "+c.username+":"+c.apikey)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err, false
+	}
+
+	listSupporterResp := &ListSupporterResponse{}
+	decodeHTMLBody(resp, listSupporterResp)
+
+	lastPage := listSupporterResp.Meta.Next == ""
+
+	return listSupporterResp.Supporters, nil, lastPage
+}
+
 // HTML utils
 
 func decodeHTMLBody(response *http.Response, i interface{}) error {

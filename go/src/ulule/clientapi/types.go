@@ -5,7 +5,7 @@ import ()
 // ListProjectResponse represents a response from
 // Ulule's API to a GET */projects request.
 type ListProjectResponse struct {
-	Meta     *Metadata
+	Meta     *Metadata  `json:"meta"`
 	Projects []*Project `json:"projects"`
 }
 
@@ -28,11 +28,30 @@ type Project struct {
 	TimeZone        string `json:"timezone"`
 }
 
+// ListSupporterResponse represents a response from
+// Ulule's API to a GET /projects/:id/supporters request.
+type ListSupporterResponse struct {
+	Meta       *Metadata    `json:"meta"`
+	Supporters []*Supporter `json:"supporters"`
+}
+
+type Supporter struct {
+	Id         int    `json:"id"`
+	Url        string `json:"absolute_url"`
+	DateJoined string `json:"date_joined"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	Name       string `json:"name"`
+	UserName   string `json:"username"`
+	TimeZone   string `json:"timezone"`
+	IsStaff    bool   `json:"is_staff"`
+}
+
 // Metadata
 type Metadata struct {
-	Limit      int `json:"limit"`
-	Offset     int `json:"offset"`
-	TotalCount int `json:"total_count"`
-	// Next ?
-	// Previous ?
+	Limit      int    `json:"limit"`
+	Offset     int    `json:"offset"`
+	TotalCount int    `json:"total_count"`
+	Next       string `json:"next"`
+	Previous   string `json:"previous"`
 }

@@ -1,81 +1,94 @@
-package main
+package clientapi
 
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"io"
 	"net/http"
-	"os"
 )
 
-type projects struct {
-	Projects []project `json:"projects"`
+// ClientAPI is a structure that can
+// be used to get data from Ulule's API
+type ClientAPI struct {
+	username   string
+	apikey     string
+	httpClient *http.Client
 }
 
-type project struct {
-	Id       int    `json:"id"`
-	Url      string `json:"absolute_url"`
-	Goal     int    `json:"goal"`
-	Commited int    `json:"committed"`
-}
+// New returns a ClientAPI structure
+// initialized with given credentials
+func New(username, apikey string) *ClientAPI {
 
-func main() {
-
-	username := ""
-	apiKey := ""
-
-	args := os.Args
-	if len(args) > 2 {
-		username = args[1]
-		apiKey = args[2]
-	}
-
-	tr := &http.Transport{
+	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
-	client := &http.Client{Transport: tr}
+	httpClient := &http.Client{Transport: transport}
 
-	req, err := http.NewRequest("GET", "https://api.ulule.com/v1/users/bloglaurel/projects?filter=created", nil)
-
-	// project id: 31458
-	// req, err := http.NewRequest("GET", "https://api.ulule.com/v1/projects/31458/orders", nil)
-
-	req.Header.Add("Authorization", "ApiKey "+username+":"+apiKey)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		logrus.Fatal(err.Error())
+	clientAPI := &ClientAPI{
+		username:   username,
+		apikey:     apikey,
+		httpClient: httpClient,
 	}
 
-	decoder := json.NewDecoder(resp.Body)
+	return clientAPI
+}
 
-	var projs projects
+// GetProjects returns ClientAPI user's projects.
+// Supported string filters: created, followed, supported
+func (c *ClientAPI) GetProjects(filter string) ([]*Project, error) {
+	if filter != "created" && filter != "followed" && filter != "supported" {
+		return nil, errors.New("ClientAPI GetProjects error: string filter not supported (" + filter + ")")
+	}
 
+	req, err := http.NewRequest("GET", "https://api.ulule.com/v1/users/"+c.username+"/projects?filter="+filter, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", "ApiKey "+c.username+":"+c.apikey)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	listProjectResp := &ListProjectResponse{}
+	decodeHTMLBody(resp, listProjectResp)
+
+	return listProjectResp.Projects, nil
+}
+
+// HTML utils
+
+func decodeHTMLBody(response *http.Response, i interface{}) error {
+	decoder := json.NewDecoder(response.Body)
 	for {
-		err = decoder.Decode(&projs)
+		err := decoder.Decode(i)
 		if err != nil && err != io.EOF {
-			logrus.Fatal(err.Error())
+			return err
 		}
-
 		if err != nil && err == io.EOF {
-			logrus.Printf("%#v", projs)
 			break
 		}
 	}
+	return nil
+}
 
-	//p := make([]byte, 64)
-	// for {
-	// n, err := resp.Body.Read(p)
-	// if err != nil && err != io.EOF {
-	// 	logrus.Fatal(err)
-	// }
-	// fmt.Printf("%s", string(p[:n]))
-
-	// if err != nil && err == io.EOF {
-	// 	fmt.Printf("\n")
-	// 	break
-	// }
-	// }
+func logHTMLBody(response *http.Response) {
+	p := make([]byte, 64)
+	for {
+		n, err := response.Body.Read(p)
+		if err != nil && err != io.EOF {
+			logrus.Fatal(err)
+		}
+		fmt.Printf("%s", string(p[:n]))
+		if err != nil && err == io.EOF {
+			fmt.Printf("\n")
+			break
+		}
+	}
 }

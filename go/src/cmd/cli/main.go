@@ -93,7 +93,7 @@ func main() {
 							limit := 20
 							for {
 								linenoise.Clear()
-								supporters, err, lastPage /*lastPage*/ := ululeClient.GetProjectSupporters(selectedProject.Id, limit, offset)
+								supporters, err, lastPage := ululeClient.GetProjectSupporters(int(selectedProject.Id), limit, offset)
 								if err != nil {
 									fmt.Println(err.Error())
 									break
@@ -101,7 +101,40 @@ func main() {
 									for _, supporter := range supporters {
 										fmt.Println(supporter.Id, "|", supporter.UserName, "|", supporter.FirstName, supporter.LastName)
 									}
-									if !lastPage {
+									if lastPage {
+										break
+									} else {
+										str, err := linenoise.Line("`enter` for next page, 'q' to exit> ")
+										if err != nil {
+											logrus.Fatal(err)
+										}
+										if str == "q" {
+											break
+										}
+										offset += limit
+									}
+								}
+							}
+						}
+					case "orders":
+						if selectedProject == nil {
+							fmt.Println("error: `project orders` needs one project to be selected with `project select`")
+						} else {
+							offset := 0
+							limit := 20
+							for {
+								linenoise.Clear()
+								orders, err, lastPage := ululeClient.GetProjectOrders(int(selectedProject.Id), limit, offset)
+								if err != nil {
+									fmt.Println(err.Error())
+									break
+								} else {
+									for _, order := range orders {
+										fmt.Println(int(order.Id), "|", order.Total, selectedProject.CurrencyDisplay, "|", order.StatusDisplay, "("+strconv.Itoa(int(order.Status))+")")
+									}
+									if lastPage {
+										break
+									} else {
 										str, err := linenoise.Line("`enter` for next page, 'q' to exit> ")
 										if err != nil {
 											logrus.Fatal(err)
@@ -129,6 +162,7 @@ func completionHandler(input string) []string {
 		"project list",
 		"project select",
 		"project supporters",
+		"project orders",
 	}
 
 	autocomplete := []string{}

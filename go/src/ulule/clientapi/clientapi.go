@@ -72,8 +72,9 @@ func (c *ClientAPI) GetProject(identifier string) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	for _, project := range projects {
-		if identifier == project.Slug || identifier == strconv.Itoa(project.Id) {
+		if identifier == project.Slug || identifier == strconv.FormatFloat(project.Id, 'f', 0, 64) {
 			return project, nil
 		}
 	}
@@ -102,10 +103,36 @@ func (c *ClientAPI) GetProjectSupporters(projectID, limit, offset int) ([]*Suppo
 
 	listSupporterResp := &ListSupporterResponse{}
 	decodeHTMLBody(resp, listSupporterResp)
-
 	lastPage := listSupporterResp.Meta.Next == ""
 
 	return listSupporterResp.Supporters, nil, lastPage
+}
+
+// GetProjectOrders lists orders for a project
+// limit and offset stand for pagination
+// the boolean returns indicates if it was the last
+// page or not.
+func (c *ClientAPI) GetProjectOrders(projectID, limit, offset int) ([]*Order, error, bool) {
+
+	projectIDStr := strconv.Itoa(projectID)
+
+	req, err := http.NewRequest("GET", "https://api.ulule.com/v1/projects/"+projectIDStr+"/orders?limit="+strconv.Itoa(limit)+"&offset="+strconv.Itoa(offset), nil)
+	if err != nil {
+		return nil, err, false
+	}
+
+	req.Header.Add("Authorization", "ApiKey "+c.username+":"+c.apikey)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err, false
+	}
+
+	listOrderResp := &ListOrderResponse{}
+	decodeHTMLBody(resp, listOrderResp)
+	lastPage := listOrderResp.Meta.Next == ""
+
+	return listOrderResp.Orders, nil, lastPage
 }
 
 // HTML utils

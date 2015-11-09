@@ -44,10 +44,6 @@ func main() {
 
 	ululeClient := clientapi.New(username, apikey)
 
-	var completionHandler = func(input string) []string {
-		return []string{"projects"}
-	}
-
 	linenoise.SetCompletionHandler(completionHandler)
 
 	for {
@@ -60,18 +56,54 @@ func main() {
 
 		if len(args) > 0 {
 			switch args[0] {
-			case "projects":
-				projects, err := ululeClient.GetProjects("created")
-				if err != nil {
-					logrus.Fatal(err)
-				}
-				// logrus.Printf("projects: %#v", projects[0])
-				for _, project := range projects {
-					percentage := int(float32(project.AmountRaised) / float32(project.Goal) * 100.0)
-					percentageStr := strconv.Itoa(percentage)
-					fmt.Println(project.Id, "|", project.Slug, "|", project.AmountRaised, project.CurrencyDisplay, "|", percentageStr+"%")
+			case "project":
+				if len(args) > 1 {
+					switch args[1] {
+					case "list":
+						projects, err := ululeClient.GetProjects("created")
+						if err != nil {
+							logrus.Fatal(err)
+						}
+						// logrus.Printf("projects: %#v", projects[0])
+						for _, project := range projects {
+							percentage := int(float32(project.AmountRaised) / float32(project.Goal) * 100.0)
+							percentageStr := strconv.Itoa(percentage)
+							fmt.Println(project.Id, "|", project.Slug, "|", project.AmountRaised, project.CurrencyDisplay, "|", percentageStr+"%")
+						}
+					case "select":
+						if len(args) > 2 {
+							project, err := ululeClient.SelectProject(args[2])
+							if err != nil {
+								fmt.Println(err.Error())
+							} else {
+								fmt.Println("project selected:", project.Id, "|", project.Slug)
+							}
+						} else {
+							fmt.Println("error: `project select` expects a project id or slug argument")
+						}
+					}
 				}
 			}
 		}
 	}
+}
+
+func completionHandler(input string) []string {
+
+	input = strings.Trim(input, " ")
+
+	commands := []string{
+		"project list",
+		"project select",
+	}
+
+	autocomplete := []string{}
+
+	for _, cmd := range commands {
+		if strings.HasPrefix(cmd, input) {
+			autocomplete = append(autocomplete, cmd)
+		}
+	}
+
+	return autocomplete
 }

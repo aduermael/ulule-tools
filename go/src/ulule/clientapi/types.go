@@ -46,6 +46,10 @@ type Supporter struct {
 	UserName   string  `json:"username"`
 	TimeZone   string  `json:"timezone"`
 	IsStaff    bool    `json:"is_staff"`
+	// email won't be provided when listing supporters
+	// because this list is public. But it won't be
+	// empty when listing orders.
+	Email string `json:"email"`
 }
 
 // ListOrderResponse represents a response from

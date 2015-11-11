@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/GeertJohan/go.linenoise"
 	"github.com/Sirupsen/logrus"
-	"os"
 	"strconv"
 	"strings"
 	"ulule/clientapi"
+	"ulule/credentials"
 )
 
 var (
@@ -18,34 +18,8 @@ func main() {
 	logrus.Println("---- Ulule CLI ----")
 
 	linenoise.LoadHistory("/var/linenoise_history")
-	username := ""
-	apikey := ""
 
-	// get username from args
-	if len(os.Args) > 1 {
-		username = os.Args[1]
-	}
-
-	// get apikey from args
-	if len(os.Args) > 2 {
-		apikey = os.Args[2]
-	}
-
-	var err error
-
-	for username == "" {
-		username, err = linenoise.Line("username> ")
-		if err != nil {
-			logrus.Fatal(err)
-		}
-	}
-
-	for apikey == "" {
-		apikey, err = linenoise.Line("apikey> ")
-		if err != nil {
-			logrus.Fatal(err)
-		}
-	}
+	username, apikey := credentials.Get(linenoise.Line)
 
 	ululeClient := clientapi.New(username, apikey)
 

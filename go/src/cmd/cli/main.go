@@ -130,7 +130,7 @@ func main() {
 									break
 								} else {
 									for _, order := range orders {
-										fmt.Println(int(order.Id), "|", order.Total, selectedProject.CurrencyDisplay, "|", order.StatusDisplay, "("+strconv.Itoa(int(order.Status))+")")
+										fmt.Println(int(order.Id), "|", order.Total, selectedProject.CurrencyDisplay, "|", order.StatusDisplay, "("+strconv.Itoa(int(order.Status))+")", "|", order.User.Email)
 									}
 									if lastPage {
 										break

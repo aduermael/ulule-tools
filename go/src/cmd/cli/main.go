@@ -17,6 +17,7 @@ var (
 func main() {
 	logrus.Println("---- Ulule CLI ----")
 
+	linenoise.LoadHistory("/var/linenoise_history")
 	username := ""
 	apikey := ""
 
@@ -55,6 +56,9 @@ func main() {
 		if err != nil {
 			logrus.Fatal(err)
 		}
+
+		linenoise.AddHistory(cmd)
+		linenoise.SaveHistory("/var/linenoise_history")
 
 		args := strings.Split(cmd, " ")
 

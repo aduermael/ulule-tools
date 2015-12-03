@@ -11,21 +11,32 @@ type ListProjectResponse struct {
 
 // Project represents an Ulule project
 type Project struct {
-	Id              float64 `json:"id"`
-	Url             string  `json:"absolute_url"`
-	Goal            int     `json:"goal"`
-	GoalRaised      bool    `json:"goal_raised"`
-	AmountRaised    int     `json:"amount_raised"`
-	CommentCount    int     `json:"comments_count"`
-	Committed       int     `json:"committed"`
-	Currency        string  `json:"currency"`
-	CurrencyDisplay string  `json:"currency_display"`
-	DateEnd         string  `json:"date_end"`
-	DateStart       string  `json:"date_start"`
-	Finished        bool    `json:"finished"`
-	Slug            string  `json:"slug"`
-	SupportersCount int     `json:"supporters_count"`
-	TimeZone        string  `json:"timezone"`
+	Id              float64   `json:"id"`
+	Url             string    `json:"absolute_url"`
+	Goal            int       `json:"goal"`
+	GoalRaised      bool      `json:"goal_raised"`
+	AmountRaised    int       `json:"amount_raised"`
+	CommentCount    int       `json:"comments_count"`
+	Committed       int       `json:"committed"`
+	Currency        string    `json:"currency"`
+	CurrencyDisplay string    `json:"currency_display"`
+	DateEnd         string    `json:"date_end"`
+	DateStart       string    `json:"date_start"`
+	Finished        bool      `json:"finished"`
+	Slug            string    `json:"slug"`
+	SupportersCount int       `json:"supporters_count"`
+	TimeZone        string    `json:"timezone"`
+	Rewards         []*Reward `json:"rewards"`
+}
+
+// Reward represents one reward in a Project
+type Reward struct {
+	Id             float64 `json:"id"`
+	Available      bool    `json:"available"`
+	Price          int     `json:"price"`
+	Stock          int     `json:"stock"`
+	StockAvailable int     `json:"stock_available"`
+	StockTaken     int     `json:"stock_taken"`
 }
 
 // ListSupporterResponse represents a response from

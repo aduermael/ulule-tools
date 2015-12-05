@@ -84,19 +84,21 @@ func main() {
 		"slug", project.Slug,
 		"supportersCount", project.SupportersCount,
 		"timeZone", project.TimeZone,
+		"nbrewards", len(project.Rewards),
 	)
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	for _, reward := range project.Rewards {
+	for i, reward := range project.Rewards {
+		index := strconv.Itoa(i)
 		err = conn.Send("HMSET", syncName+"_project",
-			"id", reward.Id,
-			"available", reward.Available,
-			"price", reward.Price,
-			"stock", reward.Stock,
-			"stockAvailable", reward.StockAvailable,
-			"stockTaken", reward.StockTaken,
+			"reward"+index+"_id", reward.Id,
+			"reward"+index+"_available", reward.Available,
+			"reward"+index+"_price", reward.Price,
+			"reward"+index+"_stock", reward.Stock,
+			"reward"+index+"_stockAvailable", reward.StockAvailable,
+			"reward"+index+"_stockTaken", reward.StockTaken,
 		)
 		if err != nil {
 			logrus.Fatal(err)
@@ -143,10 +145,6 @@ func main() {
 				logrus.Fatal(err)
 			}
 
-			// if len(order.Items) != 1 {
-			// 	fmt.Println("items:", len(order.Items), "url:", order.Url, "|", order.Total, "|", order.StatusDisplay, "|", order.User.UserName)
-			// }
-
 			// quick format for first & last name
 			firstName := order.User.FirstName
 			lastName := order.User.LastName
@@ -171,6 +169,10 @@ func main() {
 			if order.BillingAddress != nil {
 				billingAddress = order.BillingAddress
 			}
+
+			// if len(order.Items) != 1 {
+			// 	fmt.Println("items:", len(order.Items), "url:", order.Url, "|", order.Total, "|", order.StatusDisplay, "|", order.User.UserName)
+			// }
 
 			err = conn.Send("HMSET", syncName+"_order_"+strconv.Itoa(int(order.Id)),
 				"email", order.User.Email,
@@ -199,9 +201,20 @@ func main() {
 				"billingCity", billingAddress.City,
 				"billingCountry", billingAddress.Country,
 				"billingCode", billingAddress.PostalCode,
+
+				"nbItems", len(order.Items),
 			)
 			if err != nil {
 				logrus.Fatal(err)
+			}
+
+			for i, item := range order.Items {
+				index := strconv.Itoa(i)
+				err = conn.Send("HMSET", syncName+"_order_"+strconv.Itoa(int(order.Id)),
+					"item"+index+"_quantity", item.Quantity,
+					"item"+index+"_unitprice", item.UnitPrice,
+					"item"+index+"_product", item.Product,
+				)
 			}
 
 			_, err = conn.Do("EXEC")

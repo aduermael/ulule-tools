@@ -130,6 +130,11 @@ func main() {
 		logrus.Println("orders:", offset)
 	}
 
+	// TODO: get supporters as well to be able to anotate anonymous users
+	// anonymous = user ids in orders - user ids in supporters
+	// in other words, if a user id from orders can't be found in the
+	// list of supporters, it means the user wants to be anonymous
+
 	for _, order := range orders {
 
 		// don't save cancelled orders
@@ -145,26 +150,62 @@ func main() {
 				logrus.Fatal(err)
 			}
 
-			// quick format for first & last name
-			firstName := order.User.FirstName
-			lastName := order.User.LastName
+			// order.User.FirstName & order.User.LastName are not reliable
+			// as these entries are totally optional, even for paying supporters
+			// it's better to rely on order.ShippingAddress.FirstName &
+			// order.ShippingAddress.LastName. If order.ShippingAddress doesn't
+			// exist, keep empty strings for first and last names.
 
-			firstName = strings.ToUpper(firstName)
-			if len(firstName) > 1 {
-				firstName = string(firstName[0]) + strings.ToLower(firstName[1:])
-			}
-			lastName = strings.ToUpper(lastName)
-			if len(lastName) > 1 {
-				lastName = string(lastName[0]) + strings.ToLower(lastName[1:])
-			}
-
-			order.User.FirstName = firstName
-			order.User.LastName = lastName
+			firstName := ""
+			lastName := ""
 
 			shippingAddress := &clientapi.Address{}
 			if order.ShippingAddress != nil {
 				shippingAddress = order.ShippingAddress
+				firstName = shippingAddress.FirstName
+				lastName = shippingAddress.LastName
 			}
+
+			// quick format for first & last name
+
+			// first name
+			// split on ' '
+			firstNameParts := strings.Split(firstName, " ")
+			for i, part := range firstNameParts {
+				if len(part) > 1 {
+					firstNameParts[i] = strings.ToUpper(string(part[0])) + strings.ToLower(part[1:])
+				}
+			}
+			firstName = strings.Join(firstNameParts, " ")
+			// split on '-'
+			firstNameParts = strings.Split(firstName, "-")
+			for i, part := range firstNameParts {
+				if len(part) > 1 {
+					firstNameParts[i] = strings.ToUpper(string(part[0])) + strings.ToLower(part[1:])
+				}
+			}
+			firstName = strings.Join(firstNameParts, "-")
+
+			// last name
+			// split on ' '
+			lastNameParts := strings.Split(lastName, " ")
+			for i, part := range lastNameParts {
+				if len(part) > 1 {
+					lastNameParts[i] = strings.ToUpper(string(part[0])) + strings.ToLower(part[1:])
+				}
+			}
+			lastName = strings.Join(lastNameParts, " ")
+			// split on '-'
+			lastNameParts = strings.Split(lastName, "-")
+			for i, part := range lastNameParts {
+				if len(part) > 1 {
+					lastNameParts[i] = strings.ToUpper(string(part[0])) + strings.ToLower(part[1:])
+				}
+			}
+			lastName = strings.Join(lastNameParts, "-")
+
+			// TODO: improve formating considering dashes and other name patterns
+
 			billingAddress := shippingAddress
 			if order.BillingAddress != nil {
 				billingAddress = order.BillingAddress
@@ -176,13 +217,14 @@ func main() {
 
 			err = conn.Send("HMSET", syncName+"_order_"+strconv.Itoa(int(order.Id)),
 				"email", order.User.Email,
-				"firstName", order.User.FirstName,
-				"lastName", order.User.LastName,
+				"firstName", firstName,
+				"lastName", lastName,
 				"name", order.User.Name,
 				"username", order.User.UserName,
 				"datejoined", order.User.DateJoined,
 				"userurl", order.User.Url,
 				"userid", order.User.Id,
+				// TODO: add anonymous field, value: 0 or 1
 
 				"total", order.Total,
 				"method", order.PaymentMethod,

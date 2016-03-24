@@ -1,4 +1,4 @@
-FROM golang:1.5.1
+FROM golang:1.6
 
 # Install redis
 RUN cd /tmp; wget http://download.redis.io/releases/redis-3.0.5.tar.gz; tar xzf redis-3.0.5.tar.gz
@@ -7,7 +7,6 @@ RUN mv /tmp/redis-3.0.5 /srv/redis-3.0.5
 RUN cd /srv/redis-3.0.5; make
 
 # Go package experimental vendoring
-ENV GO15VENDOREXPERIMENT 1
 ADD ./go /go
 
 ADD ./data /data

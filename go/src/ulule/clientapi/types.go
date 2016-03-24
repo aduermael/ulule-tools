@@ -111,7 +111,7 @@ type Address struct {
 	Address2   string `json:"address2,omitempty"`
 	City       string `json:"city,omitempty"`
 	Country    string `json:"country,omitempty"`
-	PostalCode int    `json:"postal_code,omitempty"`
+	PostalCode string `json:"postal_code,omitempty"`
 }
 
 // Metadata

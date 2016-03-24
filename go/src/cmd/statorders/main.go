@@ -66,6 +66,7 @@ func main() {
 	fmt.Println("commands: countries [rewards], exit")
 
 	for {
+
 		cmd, err := linenoise.Line("> ")
 		if err != nil {
 			logrus.Fatal(err)
@@ -85,9 +86,98 @@ func main() {
 			break
 		case "countries":
 			displayCountries(syncName, conn, args)
+		case "export":
+			exportPaidOrders(syncName, conn, args)
 
 		}
 	}
+}
+
+func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
+	values, err := redis.Values(conn.Do("SMEMBERS", syncName))
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	conn.Send("MULTI")
+
+	// tmp
+	nbDisplayed := 0
+
+	for _, value := range values {
+		b, ok := value.([]byte)
+		if ok {
+			orderID := string(b)
+			conn.Send("HGETALL", syncName+"_order_"+orderID)
+		}
+	}
+
+	values, err = redis.Values(conn.Do("EXEC"))
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	for _, value := range values {
+		stringMap, _ := redis.StringMap(value, nil)
+
+		nbItems, _ := strconv.Atoi(stringMap["nbItems"])
+		if nbItems == 0 {
+			continue
+		}
+
+		accept := true
+		// filter reward ids
+		if rewardIDs != nil && len(rewardIDs) > 0 {
+			accept = false
+			// HACK: considering there's only one
+			// single item per order (id: 0)
+			rewardID := stringMap["item0_product"]
+			//logrus.Println(rewardID)
+
+			// if rewardID == "177453" {
+			// 	logrus.Printf("%#v", stringMap)
+			// }
+
+			for _, id := range rewardIDs {
+				if id == rewardID {
+					accept = true
+					break
+				}
+			}
+		}
+
+		if accept {
+			paymentStatus, _ := strconv.Atoi(stringMap["status"])
+			accept = clientapi.OrderStatus(paymentStatus) == clientapi.OrderStatusPaymentDone
+		}
+
+		if accept {
+
+			//logrus.Println(stringMap["statusDisplay"])
+			// logrus.Println(stringMap)
+
+			logrus.Println(stringMap["firstName"]+" "+stringMap["lastName"], "|",
+				stringMap["shippingAddr1"], "|",
+				stringMap["shippingAddr2"], "|",
+				stringMap["shippingCity"], "|",
+				stringMap["shippingCode"], "|",
+				stringMap["shippingCountry"], "|",
+				stringMap["email"], "|")
+
+			nbDisplayed++
+			if nbDisplayed >= 10 {
+				break
+			}
+			// if _, exist := countries[stringMap["shippingCountry"]]; !exist {
+			// 	countries[stringMap["shippingCountry"]] = 1
+			// } else {
+			// 	countries[stringMap["shippingCountry"]]++
+			// }
+
+			// nbContributions++
+		}
+	}
+
 }
 
 func displayCountries(syncName string, conn redis.Conn, rewardIDs []string) {
@@ -131,9 +221,9 @@ func displayCountries(syncName string, conn redis.Conn, rewardIDs []string) {
 			rewardID := stringMap["item0_product"]
 			//logrus.Println(rewardID)
 
-			if rewardID == "177453" {
-				logrus.Printf("%#v", stringMap)
-			}
+			// if rewardID == "177453" {
+			// 	logrus.Printf("%#v", stringMap)
+			// }
 
 			for _, id := range rewardIDs {
 				if id == rewardID {

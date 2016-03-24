@@ -115,7 +115,7 @@ func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 	conn.Send("MULTI")
 
 	// tmp
-	nbDisplayed := 0
+	nbEntries := 0
 
 	for _, value := range values {
 		b, ok := value.([]byte)
@@ -169,13 +169,13 @@ func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 			//logrus.Println(stringMap["statusDisplay"])
 			// logrus.Println(stringMap)
 
-			logrus.Println(stringMap["firstName"]+" "+stringMap["lastName"], "|",
-				stringMap["shippingAddr1"], "|",
-				stringMap["shippingAddr2"], "|",
-				stringMap["shippingCity"], "|",
-				stringMap["shippingCode"], "|",
-				stringMap["shippingCountry"], "|",
-				stringMap["email"], "|")
+			// logrus.Println(stringMap["firstName"]+" "+stringMap["lastName"], "|",
+			// 	stringMap["shippingAddr1"], "|",
+			// 	stringMap["shippingAddr2"], "|",
+			// 	stringMap["shippingCity"], "|",
+			// 	stringMap["shippingCode"], "|",
+			// 	stringMap["shippingCountry"], "|",
+			// 	stringMap["email"], "|")
 
 			row = sheet.AddRow()
 			cell = row.AddCell()
@@ -208,24 +208,20 @@ func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 			cell = row.AddCell()
 			cell.Value = stringMap["email"]
 
-			nbDisplayed++
-			if nbDisplayed >= 10 {
-				break
-			}
-			// if _, exist := countries[stringMap["shippingCountry"]]; !exist {
-			// 	countries[stringMap["shippingCountry"]] = 1
-			// } else {
-			// 	countries[stringMap["shippingCountry"]]++
+			nbEntries++
+			// if nbDisplayed >= 10 {
+			// 	break
 			// }
-
-			// nbContributions++
 		}
 	}
 
-	err = file.Save("/data/" + syncName + ".xlsx")
+	fileName := "/data/" + syncName + ".xlsx"
+	err = file.Save(fileName)
 	if err != nil {
 		logrus.Fatal(err)
 	}
+
+	logrus.Println(nbEntries, "entries written in", fileName)
 
 }
 

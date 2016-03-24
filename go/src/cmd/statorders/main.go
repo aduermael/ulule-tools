@@ -10,6 +10,7 @@ import (
 	"strings"
 	"ulule/clientapi"
 	// "ulule/credentials"
+	"github.com/tealeg/xlsx"
 )
 
 var ()
@@ -99,6 +100,18 @@ func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 		logrus.Fatal(err)
 	}
 
+	var file *xlsx.File
+	var sheet *xlsx.Sheet
+
+	var row *xlsx.Row
+	var cell *xlsx.Cell
+
+	file = xlsx.NewFile()
+	sheet, err = file.AddSheet("Sheet1")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
 	conn.Send("MULTI")
 
 	// tmp
@@ -164,6 +177,37 @@ func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 				stringMap["shippingCountry"], "|",
 				stringMap["email"], "|")
 
+			row = sheet.AddRow()
+			cell = row.AddCell()
+			cell.Value = stringMap["firstName"] + " " + stringMap["lastName"]
+
+			cell = row.AddCell()
+			cell.Value = stringMap["shippingAddr1"]
+
+			cell = row.AddCell()
+			cell.Value = stringMap["shippingAddr2"]
+
+			cell = row.AddCell()
+			cell.Value = stringMap["shippingCity"]
+
+			// state
+			cell = row.AddCell()
+
+			cell = row.AddCell()
+			cell.Value = stringMap["shippingCode"]
+
+			// country name
+			cell = row.AddCell()
+
+			cell = row.AddCell()
+			cell.Value = stringMap["shippingCountry"]
+
+			// phone number
+			cell = row.AddCell()
+
+			cell = row.AddCell()
+			cell.Value = stringMap["email"]
+
 			nbDisplayed++
 			if nbDisplayed >= 10 {
 				break
@@ -176,6 +220,11 @@ func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 
 			// nbContributions++
 		}
+	}
+
+	err = file.Save("/data/" + syncName + ".xlsx")
+	if err != nil {
+		logrus.Fatal(err)
 	}
 
 }

@@ -61,6 +61,28 @@ sync name>
 # be patient while syncing rewards & orders
 ```
 
+### Ulule statorders
 
+After using `cmd/sync`, **statorders** can be used to display and export information about some project orders.
+
+```shell
+# from /go
+cd src/cmd/statorders/
+go build
+./statorders/
+# sync names will be listed here
+# pick up one sync name
+use sync>
+# project name and rewards will be listed here
+# available commands will then be displayed
+```
+
+Commands:
+
+```shell
+# display supporters per country
+# (reward ids can optionally be filtered)
+> countries [reward ids]
+```
 
 

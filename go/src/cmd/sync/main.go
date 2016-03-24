@@ -164,6 +164,16 @@ func main() {
 				shippingAddress = order.ShippingAddress
 				firstName = shippingAddress.FirstName
 				lastName = shippingAddress.LastName
+
+				// get rid of extra lines in Address1
+				shippingAddress.Address1 = strings.Replace(shippingAddress.Address1, "\n", " ", -1)
+				shippingAddress.Address1 = strings.Replace(shippingAddress.Address1, "\r", " ", -1)
+				shippingAddress.Address1 = strings.Replace(shippingAddress.Address1, "  ", " ", -1)
+
+				// get rid of extra lines in Address2
+				shippingAddress.Address2 = strings.Replace(shippingAddress.Address2, "\n", " ", -1)
+				shippingAddress.Address2 = strings.Replace(shippingAddress.Address2, "\r", " ", -1)
+				shippingAddress.Address2 = strings.Replace(shippingAddress.Address2, "  ", " ", -1)
 			}
 
 			// quick format for first & last name
@@ -185,6 +195,7 @@ func main() {
 				}
 			}
 			firstName = strings.Join(firstNameParts, "-")
+			firstName = strings.Trim(firstName, " ")
 
 			// last name
 			// split on ' '
@@ -203,12 +214,23 @@ func main() {
 				}
 			}
 			lastName = strings.Join(lastNameParts, "-")
+			lastName = strings.Trim(lastName, " ")
 
 			// TODO: improve formating considering dashes and other name patterns
 
 			billingAddress := shippingAddress
 			if order.BillingAddress != nil {
 				billingAddress = order.BillingAddress
+
+				// get rid of extra lines in Address1
+				billingAddress.Address1 = strings.Replace(billingAddress.Address1, "\n", " ", -1)
+				billingAddress.Address1 = strings.Replace(billingAddress.Address1, "\r", " ", -1)
+				billingAddress.Address1 = strings.Replace(billingAddress.Address1, "  ", " ", -1)
+
+				// get rid of extra lines in Address2
+				billingAddress.Address2 = strings.Replace(billingAddress.Address2, "\n", " ", -1)
+				billingAddress.Address2 = strings.Replace(billingAddress.Address2, "\r", " ", -1)
+				billingAddress.Address2 = strings.Replace(billingAddress.Address2, "  ", " ", -1)
 			}
 
 			// if len(order.Items) != 1 {

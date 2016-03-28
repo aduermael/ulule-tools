@@ -64,7 +64,7 @@ func main() {
 		fmt.Println(id, price)
 	}
 
-	fmt.Println("commands: countries [rewards], exit")
+	fmt.Println("commands: export [rewards], countries [rewards], exit")
 
 	for {
 
@@ -94,6 +94,15 @@ func main() {
 	}
 }
 
+func isValid(invalidOrderIDs []string, orderID string) bool {
+	for _, invalidOrderID := range invalidOrderIDs {
+		if orderID == invalidOrderID {
+			return false
+		}
+	}
+	return true
+}
+
 func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 	values, err := redis.Values(conn.Do("SMEMBERS", syncName))
 	if err != nil {
@@ -112,10 +121,19 @@ func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 		logrus.Fatal(err)
 	}
 
+	// get invalid orders, to exclude them form export
+	invalidOrders, errInvalidOrders := redis.Strings(redis.Values(conn.Do("SMEMBERS", syncName+"_invalidOrders")))
+	if errInvalidOrders != nil {
+		logrus.Fatal(errInvalidOrders)
+	}
+	// logrus.Println("invalidOrders:", invalidOrders)
+
 	conn.Send("MULTI")
 
 	// tmp
 	nbEntries := 0
+	nbPaymentInvalid := 0
+	nbInvalid := 0
 
 	for _, value := range values {
 		b, ok := value.([]byte)
@@ -147,10 +165,6 @@ func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 			rewardID := stringMap["item0_product"]
 			//logrus.Println(rewardID)
 
-			// if rewardID == "177453" {
-			// 	logrus.Printf("%#v", stringMap)
-			// }
-
 			for _, id := range rewardIDs {
 				if id == rewardID {
 					accept = true
@@ -162,6 +176,18 @@ func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 		if accept {
 			paymentStatus, _ := strconv.Atoi(stringMap["status"])
 			accept = clientapi.OrderStatus(paymentStatus) == clientapi.OrderStatusPaymentDone
+			if !accept && clientapi.OrderStatus(paymentStatus) == clientapi.OrderStatusInvalid {
+				nbPaymentInvalid++
+			}
+		}
+
+		if accept {
+			// invalid orders are the one that can't be sent because users made a mistake
+			// in the shipping address (lefting one or more fields blank)
+			accept = isValid(invalidOrders, stringMap["orderId"])
+			if !accept {
+				nbInvalid++
+			}
 		}
 
 		if accept {
@@ -222,7 +248,8 @@ func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 	}
 
 	logrus.Println(nbEntries, "entries written in", fileName)
-
+	logrus.Println("(" + strconv.Itoa(nbPaymentInvalid) + " payment invalid)")
+	logrus.Println("(" + strconv.Itoa(nbInvalid) + " invalid shipping addresses)")
 }
 
 func displayCountries(syncName string, conn redis.Conn, rewardIDs []string) {

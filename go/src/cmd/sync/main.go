@@ -166,24 +166,37 @@ func main() {
 				lastName = shippingAddress.LastName
 
 				// get rid of extra lines in Address1
+				shippingAddress.Address1 = strings.Trim(shippingAddress.Address1, " \n\r")
 				shippingAddress.Address1 = strings.Replace(shippingAddress.Address1, "\n", " ", -1)
 				shippingAddress.Address1 = strings.Replace(shippingAddress.Address1, "\r", " ", -1)
 				shippingAddress.Address1 = strings.Replace(shippingAddress.Address1, "  ", " ", -1)
 
 				// get rid of extra lines in Address2
+				shippingAddress.Address2 = strings.Trim(shippingAddress.Address2, " \n\r")
 				shippingAddress.Address2 = strings.Replace(shippingAddress.Address2, "\n", " ", -1)
 				shippingAddress.Address2 = strings.Replace(shippingAddress.Address2, "\r", " ", -1)
 				shippingAddress.Address2 = strings.Replace(shippingAddress.Address2, "  ", " ", -1)
+
+				// Apparenlty, some people think address2 is a confirmation of address1
+				// so they put the exact same thing on both sides
+				// in this case, just replacing address2 by empty string
+				if shippingAddress.Address2 == shippingAddress.Address1 {
+					shippingAddress.Address2 = ""
+				}
 			}
 
 			// quick format for first & last name
 
 			// first name
+			firstName = strings.ToLower(firstName)
+			firstName = strings.Trim(firstName, " -")
 			// split on ' '
 			firstNameParts := strings.Split(firstName, " ")
 			for i, part := range firstNameParts {
 				if len(part) > 1 {
-					firstNameParts[i] = strings.ToUpper(string(part[0])) + strings.ToLower(part[1:])
+					firstNameParts[i] = strings.ToUpper(string(part[0])) + part[1:]
+				} else if len(part) > 0 {
+					firstNameParts[i] = strings.ToUpper(string(part[0]))
 				}
 			}
 			firstName = strings.Join(firstNameParts, " ")
@@ -191,18 +204,24 @@ func main() {
 			firstNameParts = strings.Split(firstName, "-")
 			for i, part := range firstNameParts {
 				if len(part) > 1 {
-					firstNameParts[i] = strings.ToUpper(string(part[0])) + strings.ToLower(part[1:])
+					firstNameParts[i] = strings.ToUpper(string(part[0])) + part[1:]
+				} else if len(part) > 0 {
+					firstNameParts[i] = strings.ToUpper(string(part[0]))
 				}
 			}
 			firstName = strings.Join(firstNameParts, "-")
 			firstName = strings.Trim(firstName, " ")
 
 			// last name
+			lastName = strings.ToLower(lastName)
+			lastName = strings.Trim(lastName, " -")
 			// split on ' '
 			lastNameParts := strings.Split(lastName, " ")
 			for i, part := range lastNameParts {
 				if len(part) > 1 {
-					lastNameParts[i] = strings.ToUpper(string(part[0])) + strings.ToLower(part[1:])
+					lastNameParts[i] = strings.ToUpper(string(part[0])) + part[1:]
+				} else if len(part) > 0 {
+					lastNameParts[i] = strings.ToUpper(string(part[0]))
 				}
 			}
 			lastName = strings.Join(lastNameParts, " ")
@@ -210,7 +229,9 @@ func main() {
 			lastNameParts = strings.Split(lastName, "-")
 			for i, part := range lastNameParts {
 				if len(part) > 1 {
-					lastNameParts[i] = strings.ToUpper(string(part[0])) + strings.ToLower(part[1:])
+					lastNameParts[i] = strings.ToUpper(string(part[0])) + part[1:]
+				} else if len(part) > 0 {
+					lastNameParts[i] = strings.ToUpper(string(part[0]))
 				}
 			}
 			lastName = strings.Join(lastNameParts, "-")
@@ -223,14 +244,23 @@ func main() {
 				billingAddress = order.BillingAddress
 
 				// get rid of extra lines in Address1
+				billingAddress.Address1 = strings.Trim(billingAddress.Address1, " \n\r")
 				billingAddress.Address1 = strings.Replace(billingAddress.Address1, "\n", " ", -1)
 				billingAddress.Address1 = strings.Replace(billingAddress.Address1, "\r", " ", -1)
 				billingAddress.Address1 = strings.Replace(billingAddress.Address1, "  ", " ", -1)
 
 				// get rid of extra lines in Address2
+				billingAddress.Address2 = strings.Trim(billingAddress.Address2, " \n\r")
 				billingAddress.Address2 = strings.Replace(billingAddress.Address2, "\n", " ", -1)
 				billingAddress.Address2 = strings.Replace(billingAddress.Address2, "\r", " ", -1)
 				billingAddress.Address2 = strings.Replace(billingAddress.Address2, "  ", " ", -1)
+
+				// Apparenlty, some people think address2 is a confirmation of address1
+				// so they put the exact same thing on both sides
+				// in this case, just replacing address2 by empty string
+				if billingAddress.Address2 == billingAddress.Address1 {
+					billingAddress.Address2 = ""
+				}
 			}
 
 			// if len(order.Items) != 1 {
@@ -238,6 +268,10 @@ func main() {
 			// }
 
 			err = conn.Send("HMSET", syncName+"_order_"+strconv.Itoa(int(order.Id)),
+
+				// repeating hash key in values for flexibility
+				"orderId", strconv.Itoa(int(order.Id)),
+
 				"email", order.User.Email,
 				"firstName", firstName,
 				"lastName", lastName,
@@ -279,6 +313,16 @@ func main() {
 					"item"+index+"_unitprice", item.UnitPrice,
 					"item"+index+"_product", item.Product,
 				)
+			}
+
+			// Put invalid orders in a set.
+			// Invalid orders are the ones that can't be sent as there's something
+			// incorrect with the shipping address. Basically if some fields are empty
+			// This allows to build a new list later based on invalid orders that
+			// got fixed by contributors.
+
+			if (shippingAddress.Address1 == "" && shippingAddress.Address2 == "") || firstName == "" || lastName == "" || shippingAddress.City == "" || shippingAddress.Country == "" || shippingAddress.PostalCode == "" {
+				conn.Send("SADD", syncName+"_invalidOrders", strconv.Itoa(int(order.Id)))
 			}
 
 			_, err = conn.Do("EXEC")

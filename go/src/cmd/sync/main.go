@@ -293,12 +293,18 @@ func main() {
 				"shippingCity", shippingAddress.City,
 				"shippingCountry", shippingAddress.Country,
 				"shippingCode", shippingAddress.PostalCode,
+				"shippingState", shippingAddress.State,
+				"shippingPhoneNumber", shippingAddress.PhoneNumber,
+				"shippingEntityName", shippingAddress.EntityName,
 
 				"billingAddr1", billingAddress.Address1,
 				"billingAddr2", billingAddress.Address2,
 				"billingCity", billingAddress.City,
 				"billingCountry", billingAddress.Country,
 				"billingCode", billingAddress.PostalCode,
+				"billingState", billingAddress.State,
+				"billingPhoneNumber", billingAddress.PhoneNumber,
+				"billingEntityName", billingAddress.EntityName,
 
 				"nbItems", len(order.Items),
 			)

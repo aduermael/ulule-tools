@@ -10,7 +10,10 @@ import (
 	"strings"
 	"ulule/clientapi"
 	// "ulule/credentials"
+	"encoding/json"
 	"github.com/tealeg/xlsx"
+	"io/ioutil"
+	"net/http"
 )
 
 var ()
@@ -104,6 +107,28 @@ func isValid(invalidOrderIDs []string, orderID string) bool {
 }
 
 func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
+
+	resp, err := http.Get("http://country.io/names.json")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	jsonCountriesData, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	//countriesMap := make(map[string]interface{})
+	countriesMap := make(map[string]string)
+
+	err = json.Unmarshal([]byte(jsonCountriesData), &countriesMap)
+
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
 	values, err := redis.Values(conn.Do("SMEMBERS", syncName))
 	if err != nil {
 		logrus.Fatal(err)
@@ -218,18 +243,23 @@ func exportPaidOrders(syncName string, conn redis.Conn, rewardIDs []string) {
 
 			// state
 			cell = row.AddCell()
+			if stringMap["shippingCountry"] == "US" {
+				cell.Value = stringMap["shippingState"]
+			}
 
 			cell = row.AddCell()
 			cell.Value = stringMap["shippingCode"]
 
 			// country name
 			cell = row.AddCell()
+			cell.Value = countriesMap[stringMap["shippingCountry"]]
 
 			cell = row.AddCell()
 			cell.Value = stringMap["shippingCountry"]
 
 			// phone number
 			cell = row.AddCell()
+			cell.Value = stringMap["shippingPhoneNumber"]
 
 			cell = row.AddCell()
 			cell.Value = stringMap["email"]

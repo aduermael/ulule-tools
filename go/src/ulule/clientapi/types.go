@@ -105,13 +105,16 @@ type OrderItem struct {
 
 // Address represents a postal address
 type Address struct {
-	FirstName  string `json:"first_name,omitempty"`
-	LastName   string `json:"last_name,omitempty"`
-	Address1   string `json:"address1,omitempty"`
-	Address2   string `json:"address2,omitempty"`
-	City       string `json:"city,omitempty"`
-	Country    string `json:"country,omitempty"`
-	PostalCode string `json:"postal_code,omitempty"`
+	FirstName   string `json:"first_name,omitempty"`
+	LastName    string `json:"last_name,omitempty"`
+	Address1    string `json:"address1,omitempty"`
+	Address2    string `json:"address2,omitempty"`
+	City        string `json:"city,omitempty"`
+	Country     string `json:"country,omitempty"`
+	PostalCode  string `json:"postal_code,omitempty"`
+	State       string `json:"state,omitempty"`
+	PhoneNumber string `json:"phone_number,omitempty"`
+	EntityName  string `json:"entity_name,omitempty"`
 }
 
 // Metadata

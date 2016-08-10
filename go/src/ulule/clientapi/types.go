@@ -88,11 +88,18 @@ type Order struct {
 type OrderStatus int8
 
 const (
-	OrderStatusAwaiting    OrderStatus = 3
-	OrderStatusCompleted   OrderStatus = 4
-	OrderStatusCancelled   OrderStatus = 6
-	OrderStatusPaymentDone OrderStatus = 7
-	OrderStatusInvalid     OrderStatus = 9
+	OrderStatusProcessing                 OrderStatus = 1
+	OrderStatusSelectingPayment           OrderStatus = 2
+	OrderStatusAwaiting                   OrderStatus = 3
+	OrderStatusCompleted                  OrderStatus = 4
+	OrderStatusShipped                    OrderStatus = 5
+	OrderStatusCancelled                  OrderStatus = 6
+	OrderStatusPaymentDone                OrderStatus = 7
+	OrderStatusPaymentAborted             OrderStatus = 8
+	OrderStatusInvalid                    OrderStatus = 9
+	OrderStatusPaymentReimbursedToEWallet OrderStatus = 10
+	OrderStatusPaymentReimbursed          OrderStatus = 11
+	OrderStatusError                      OrderStatus = 12
 )
 
 // OrderItem represents an Ulule project order item

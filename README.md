@@ -58,6 +58,11 @@ apikey>
 project id>
 # enter a name for following sync operation
 sync name>
+# leave blank to sync everything
+# entering the name of a previous sync will result
+# in syncing only orders that were invalid 
+# (missing address, name, etc.)
+only invalid orders from sync>
 # be patient while syncing rewards & orders
 ```
 
@@ -83,6 +88,11 @@ Commands:
 # display supporters per country
 # (reward ids can optionally be filtered)
 > countries [reward ids]
+```
+
+```shell
+# export orders to .xlsx file, for given reward IDs
+> export [reward id]
 ```
 
 

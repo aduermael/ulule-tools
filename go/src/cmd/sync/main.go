@@ -44,9 +44,31 @@ func main() {
 		logrus.Fatal(err)
 	}
 
+	// leave blank to sync them all
+	// otherwise, only invalid orders from a previous sync will
+	// be considered
+	syncOnlyInvalids := false
+	invalidOrdersSyncName, err := linenoise.Line("only invalid orders from sync> ")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
 	conn, err := redis.Dial("tcp", "127.0.0.1:6379")
 	if err != nil {
 		logrus.Fatal(err)
+	}
+
+	invalidOrders := make(map[string]struct{})
+
+	if invalidOrdersSyncName != "" {
+		syncOnlyInvalids = true
+		invalids, errInvalidOrders := redis.Strings(redis.Values(conn.Do("SMEMBERS", invalidOrdersSyncName+"_invalidOrders")))
+		if errInvalidOrders != nil {
+			logrus.Fatal(errInvalidOrders)
+		}
+		for _, invalid := range invalids {
+			invalidOrders[invalid] = struct{}{}
+		}
 	}
 
 	// store syncName
@@ -136,6 +158,13 @@ func main() {
 	// list of supporters, it means the user wants to be anonymous
 
 	for _, order := range orders {
+
+		if syncOnlyInvalids == true {
+			_, ok := invalidOrders[strconv.Itoa(int(order.Id))]
+			if ok == false {
+				continue
+			}
+		}
 
 		// don't save cancelled orders
 		if order.Status != clientapi.OrderStatusCancelled {

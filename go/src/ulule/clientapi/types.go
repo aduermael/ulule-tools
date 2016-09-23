@@ -74,8 +74,9 @@ type ListOrderResponse struct {
 type Order struct {
 	Id              float64      `json:"id"`
 	Url             string       `json:"absolute_url"`
-	Subtotal        string       `json:"order_subtotal"`
-	Total           string       `json:"order_total"`
+	Subtotal        float64      `json:"order_subtotal"`
+	Total           float64      `json:"order_total"`
+	ShippingTotal   float64      `json:"order_shipping_total"`
 	PaymentMethod   string       `json:"payment_method"`
 	Status          OrderStatus  `json:"status"`
 	StatusDisplay   string       `json:"status_display"`
@@ -104,24 +105,29 @@ const (
 
 // OrderItem represents an Ulule project order item
 type OrderItem struct {
-	UnitPrice string `json:"unit_price"`
-	Quantity  int    `json:"quantity"`
-	Product   int    `json:"product"`
-	LineTotal string `json:"line_total"`
+	UnitPrice         float64 `json:"unit_price"`
+	Quantity          int     `json:"quantity"`
+	Product           int     `json:"reward_id"`
+	LineTotal         float64 `json:"line_total"`
+	LineSubTotal      float64 `json:"line_subtotal"`
+	LineShippingTotal float64 `json:"line_shipping_total"`
+	// TODO: add "reward" attribute
 }
 
 // Address represents a postal address
 type Address struct {
-	FirstName   string `json:"first_name,omitempty"`
-	LastName    string `json:"last_name,omitempty"`
-	Address1    string `json:"address1,omitempty"`
-	Address2    string `json:"address2,omitempty"`
-	City        string `json:"city,omitempty"`
-	Country     string `json:"country,omitempty"`
-	PostalCode  string `json:"postal_code,omitempty"`
-	State       string `json:"state,omitempty"`
-	PhoneNumber string `json:"phone_number,omitempty"`
-	EntityName  string `json:"entity_name,omitempty"`
+	Id          float64 `json:"id"`
+	UserID      float64 `json:"user_id"`
+	FirstName   string  `json:"first_name,omitempty"`
+	LastName    string  `json:"last_name,omitempty"`
+	Address1    string  `json:"address1,omitempty"`
+	Address2    string  `json:"address2,omitempty"`
+	City        string  `json:"city,omitempty"`
+	Country     string  `json:"country,omitempty"`
+	PostalCode  string  `json:"postal_code,omitempty"`
+	State       string  `json:"state,omitempty"`
+	PhoneNumber string  `json:"phone_number,omitempty"`
+	EntityName  string  `json:"entity_name,omitempty"`
 }
 
 // Metadata
